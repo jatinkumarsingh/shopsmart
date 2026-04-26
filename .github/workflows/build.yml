@@ -1,0 +1,41 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Build Frontend
+        working-directory: ./client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build Backend
+        working-directory: ./server
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run Linting
+        run: |
+          cd server && npm run lint && cd ../client && npm run lint
+
+      - name: Run Tests
+        run: |
+          cd server && npm test && cd ../client && npm test
